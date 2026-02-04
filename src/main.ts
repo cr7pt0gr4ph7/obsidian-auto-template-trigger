@@ -56,6 +56,35 @@ export default class AutoTemplatePromptPlugin extends Plugin {
 
 		this.registerEvent(
 			this.app.vault.on("rename", async (file, oldPath) => {
+				// Handle renames of template files and associated folders
+				let settingsChanged = false;
+				const folderSpecificTemplates = this.settings.folderSpecificTemplates;
+				for (let i = 0; i < folderSpecificTemplates.length; i++) {
+					const item = folderSpecificTemplates[i];
+
+					// Track renames of folders with associated templates
+					if (item.folderPath === oldPath) {
+						item.folderPath = file.path;
+						settingsChanged = true;
+					} else if (item.folderPath.startsWith(oldPath + "/")) {
+						item.folderPath = file.path + item.folderPath.slice(oldPath.length);
+						settingsChanged = true;
+					}
+
+					// Track renames of template files
+					if (item.templateName === oldPath) {
+						item.templateName = file.path;
+						settingsChanged = true;
+					} else if (item.templateName.startsWith(oldPath + "/")) {
+						item.templateName = file.path + item.templateName.slice(oldPath.length);
+						settingsChanged = true;
+					}
+				}
+				if (settingsChanged) {
+					await this.saveSettings();
+				}
+
+				// Handle renames of newly created files
 				if (!this.settings.deferPromptUntilNamed) {
 					this.focusedFile = undefined;
 					return;
