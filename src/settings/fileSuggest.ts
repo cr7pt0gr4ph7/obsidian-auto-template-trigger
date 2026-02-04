@@ -9,8 +9,7 @@ export class TemplateSuggest extends TextInputSuggest<TFile> {
 			return [];
 		}
 		const templateFiles = this.app.vault
-			.getAllLoadedFiles()
-			.filter((i) => i.path.startsWith(templatesFolder));
+			.getAllLoadedFiles();
 		const files: TFile[] = [];
 		const lowerCaseInputStr = inputStr.toLowerCase();
 
