@@ -12,7 +12,6 @@ import {
 	setPromptOpacity,
 } from "utils/utils";
 
-const TEMPLATE_SUGGESTION_CLASS = "suggestion-item";
 const INSERT_TEMPLATE_COMMAND = "insert-template";
 
 export default class AutoTemplatePromptPlugin extends Plugin {
@@ -210,25 +209,19 @@ export default class AutoTemplatePromptPlugin extends Plugin {
 	}
 
 	applySpecificTemplate(templateName: string) {
-		setPromptOpacity(0);
-		this.triggerTemplateSelectorPrompt();
+		const templatesPlugin: {
+			insertTemplate(templateFile: TFile): void
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		} = (this.app as any).internalPlugins.plugins.templates.instance;
 
-		const suggestions = Array.from(
-			document.getElementsByClassName(TEMPLATE_SUGGESTION_CLASS)
-		);
-
-		const template = suggestions.find(
-			(suggestion) => suggestion.textContent === templateName
-		);
-
-		if (template instanceof HTMLElement) {
-			template.scrollIntoView();
-			template.click();
-		} else {
-			console.error("Template not found: ", templateName);
+		const templatePath = templateName;
+		const templateFile = this.app.vault.getFileByPath(templatePath);
+		if (!templateFile) {
+			console.error("⚠️ Template file not found: " + templatePath);
+			return;
 		}
 
-		setPromptOpacity(1);
+		templatesPlugin.insertTemplate(templateFile);
 	}
 
 	triggerTemplateSelectorPrompt() {
