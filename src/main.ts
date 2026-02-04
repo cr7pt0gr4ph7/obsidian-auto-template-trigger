@@ -113,6 +113,10 @@ export default class AutoTemplatePromptPlugin extends Plugin {
 		);
 	}
 
+	async onExternalSettingsChange() {
+		await this.loadSettings();
+	}
+
 	async loadSettings() {
 		this.settings = Object.assign(
 			{},
