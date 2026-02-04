@@ -28,11 +28,11 @@ export class TemplateSuggest extends TextInputSuggest<TFile> {
 	}
 
 	renderSuggestion(file: TFile, el: HTMLElement): void {
-		el.setText(file.basename);
+		el.setText(file.path);
 	}
 
 	selectSuggestion(file: TFile): void {
-		this.inputEl.value = file.basename;
+		this.inputEl.value = file.path;
 		this.inputEl.trigger("input");
 		this.close();
 	}

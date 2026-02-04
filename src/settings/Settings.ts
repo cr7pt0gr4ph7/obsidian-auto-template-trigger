@@ -1,7 +1,6 @@
-import { FolderSuggest } from "./fileSuggest";
+import { FolderSuggest, TemplateSuggest } from "./fileSuggest";
 import AutoTemplatePromptPlugin from "../main";
-import { App, PluginSettingTab, Setting, TAbstractFile, TFile } from "obsidian";
-import { getTemplatesFolder } from "utils/utils";
+import { App, PluginSettingTab, Setting } from "obsidian";
 
 export interface PluginSettings {
 	folderSpecificTemplates: { folderPath: string; templateName: string }[];
@@ -36,7 +35,7 @@ export class Settings extends PluginSettingTab {
 			);
 
 		this.plugin.settings.folderSpecificTemplates.map(
-			({ folderPath }, index) => {
+			({ folderPath, templateName }, index) => {
 				new Setting(this.containerEl)
 					.addSearch((cb) => {
 						new FolderSuggest(this.app, cb.inputEl);
@@ -50,38 +49,15 @@ export class Settings extends PluginSettingTab {
 							this.plugin.saveSettings();
 						});
 					})
-					.addDropdown(async (cb) => {
-						const templatesFolder = await getTemplatesFolder(
-							this.app
-						);
-						if (!templatesFolder) {
-							return [];
-						}
-						const templateFiles = this.app.vault
-							.getAllLoadedFiles()
-							.filter((i) => i.path.startsWith(templatesFolder));
-
-						templateFiles.forEach((file: TAbstractFile) => {
-							const initialValue =
-								this.plugin.settings.folderSpecificTemplates[
-									index
-								].templateName;
-							if (
-								file instanceof TFile &&
-								file.extension === "md"
-							) {
-								cb.addOption(
-									file.basename,
-									`Template: ${file.basename}`
-								);
-							}
-							cb.setValue(initialValue);
-						});
-
-						cb.onChange((value) => {
+					.addSearch((cb) => {
+						new TemplateSuggest(this.app, cb.inputEl);
+						cb.setValue(templateName);
+						cb.setPlaceholder("Select a template file");
+						cb.onChange(() => {
 							this.plugin.settings.folderSpecificTemplates[
 								index
-							].templateName = value;
+							].templateName = cb.getValue();
+
 							this.plugin.saveSettings();
 						});
 					})
