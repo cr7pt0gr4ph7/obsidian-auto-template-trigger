@@ -1,9 +1,8 @@
-import { TAbstractFile, TFile, TFolder } from "obsidian";
-import { TextInputSuggest } from "./suggest";
+import { AbstractInputSuggest, TAbstractFile, TFile, TFolder } from "obsidian";
 import { getTemplatesFolder } from "../utils/utils";
 
-export class TemplateSuggest extends TextInputSuggest<TFile> {
-	async getSuggestions(inputStr: string): Promise<TFile[]> {
+export class TemplateSuggest extends AbstractInputSuggest<TFile> {
+	override async getSuggestions(inputStr: string): Promise<TFile[]> {
 		const templatesFolder = await getTemplatesFolder(this.app);
 		if (!templatesFolder) {
 			return [];
@@ -26,19 +25,18 @@ export class TemplateSuggest extends TextInputSuggest<TFile> {
 		return files;
 	}
 
-	renderSuggestion(file: TFile, el: HTMLElement): void {
+	override renderSuggestion(file: TFile, el: HTMLElement): void {
 		el.setText(file.path);
 	}
 
-	selectSuggestion(file: TFile): void {
-		this.inputEl.value = file.path;
-		this.inputEl.trigger("input");
+	override selectSuggestion(file: TFile, evt: MouseEvent | KeyboardEvent): void {
+		this.setValue(file.path);
 		this.close();
 	}
 }
 
-export class FolderSuggest extends TextInputSuggest<TFolder> {
-	async getSuggestions(inputStr: string): Promise<TFolder[]> {
+export class FolderSuggest extends AbstractInputSuggest<TFolder> {
+	override async getSuggestions(inputStr: string): Promise<TFolder[]> {
 		const templatesFolder = await getTemplatesFolder(this.app);
 
 		const abstractFiles = this.app.vault.getAllLoadedFiles();
@@ -58,13 +56,12 @@ export class FolderSuggest extends TextInputSuggest<TFolder> {
 		return folders;
 	}
 
-	renderSuggestion(file: TFolder, el: HTMLElement): void {
+	override renderSuggestion(file: TFolder, el: HTMLElement): void {
 		el.setText(file.path);
 	}
 
-	selectSuggestion(file: TFolder): void {
-		this.inputEl.value = file.path;
-		this.inputEl.trigger("input");
+	override selectSuggestion(file: TFolder): void {
+		this.setValue(file.path);
 		this.close();
 	}
 }
