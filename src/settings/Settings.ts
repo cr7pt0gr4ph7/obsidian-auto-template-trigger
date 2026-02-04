@@ -5,13 +5,15 @@ import { App, PluginSettingTab, Setting } from "obsidian";
 export interface PluginSettings {
 	folderSpecificTemplates: { folderPath: string; templateName: string }[];
 	disablePrompt: boolean;
-	debug: boolean
+	debug: boolean;
+	deferPromptUntilNamed: boolean;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
 	folderSpecificTemplates: [],
 	disablePrompt: false,
-	debug: false
+	debug: false,
+	deferPromptUntilNamed: true,
 };
 
 export class Settings extends PluginSettingTab {
@@ -95,6 +97,20 @@ export class Settings extends PluginSettingTab {
 				cb.setValue(this.plugin.settings.disablePrompt).onChange(
 					async (value) => {
 						this.plugin.settings.disablePrompt = value;
+						await this.plugin.saveSettings();
+					}
+				);
+			});
+
+		new Setting(containerEl)
+			.setName("Wait until rename")
+			.setDesc(
+				"Only prompt for a template after the user has named the new file."
+			)
+			.addToggle((cb) => {
+				cb.setValue(this.plugin.settings.deferPromptUntilNamed).onChange(
+					async (value) => {
+						this.plugin.settings.deferPromptUntilNamed = value;
 						await this.plugin.saveSettings();
 					}
 				);

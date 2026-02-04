@@ -17,6 +17,8 @@ const INSERT_TEMPLATE_COMMAND = "insert-template";
 export default class AutoTemplatePromptPlugin extends Plugin {
 	isReady = false;
 	settings: PluginSettings;
+	focusedFile?: TFile;
+
 	async onload() {
 		setPromptOpacity(1);
 
@@ -29,6 +31,8 @@ export default class AutoTemplatePromptPlugin extends Plugin {
 
 		this.registerEvent(
 			this.app.workspace.on("file-open", async (file) => {
+				this.focusedFile = undefined;
+
 				if (!file) {
 					return;
 				}
@@ -37,14 +41,45 @@ export default class AutoTemplatePromptPlugin extends Plugin {
 				const shouldTriggerPrompt =
 					await this.shouldTriggerTemplatePrompt(file);
 
-				if (shouldTriggerPrompt) {
-					await this.handleTemplateTrigger();
-				}
-				else {
+				if (!shouldTriggerPrompt) {
 					this.log('❌ No action')
+				} else if (this.settings.deferPromptUntilNamed) {
+					this.log("ℹ️ Deferring template prompt until the new file is renamed")
+					this.focusedFile = file;
+				} else {
+					await this.handleTemplateTrigger();
 				}
 
 				this.logGroupEnd()
+			})
+		);
+
+		this.registerEvent(
+			this.app.vault.on("rename", async (file, oldPath) => {
+				if (!this.settings.deferPromptUntilNamed) {
+					this.focusedFile = undefined;
+					return;
+				}
+
+				this.log("ℹ️ Rename detected: " + oldPath + " => " + file.path);
+
+				if (this.focusedFile === file) {
+					this.logGroup("[Deferrred Auto Template Prompt] 📙 " + file.name);
+					const shouldTriggerPrompt =
+						await this.shouldTriggerTemplatePrompt(file as TFile);
+
+					if (shouldTriggerPrompt) {
+						await this.handleTemplateTrigger();
+					} else {
+						this.log('❌ No action');
+					}
+
+					this.logGroupEnd()
+				} else {
+					this.log('❌ Renamed file is unrelated to new file');
+				}
+
+				this.focusedFile = undefined;
 			})
 		);
 	}
